@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+  {% if error %}
+    {{ error }}
+  {% else %}
+    В городе {{ city_name }} сейчас <br>
+    Температура {{ obj.temp }} °C <br>
+    Скорость ветра {{ obj.wind_speed }} м/с <br>
+    Давление {{ obj.pressure_mm }} мм рт. ст. <br>
+  {% endif %}
+</body>
+</html>

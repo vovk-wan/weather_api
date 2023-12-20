@@ -1,0 +1,54 @@
+version: '3.7'
+
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: dockerfiles/DockerfileDB
+    environment:
+      - POSTGRES_USER=weather
+      - POSTGRES_PASSWORD=weather
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data/
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    entrypoint: [ "sh", "-c",
+                  "echo 'client_max_body_size 100m;' >> /etc/nginx/proxy.conf;
+                  /app/docker-entrypoint.sh forego start -r" ]
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+  web:
+    <<: &web
+      build:
+        context: .
+        dockerfile: dockerfiles/Dockerfile
+      image: training/web
+      environment:
+        - DEBUG=True
+        - DATABASE_URL=postgres://weather:weather@db/weather
+        - VIRTUAL_HOST=weather.localhost
+        - VIRTUAL_PORT=8000
+        - TELEGRAM_BOT_TOKEN=111111111111111111111111
+        - YANDEX_API_KEY=22222222222222222222
+      volumes:
+        - .:/app
+        - web-static:/app/staticfiles
+#      ports:
+#        - 8000:8000
+      command: python manage.py runserver 0.0.0.0:8000
+      depends_on:
+        - db
+        - nginx-proxy
+  telebot:
+    <<: *web
+    command: python manage.py start_bot
+
+volumes:
+  db-data:
+  web-static:
