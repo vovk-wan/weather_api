@@ -1,3 +1,5 @@
+import logging
+
 import telebot
 
 from django.conf import settings
@@ -6,8 +8,9 @@ from telebot.types import Message, ReplyKeyboardMarkup
 from api.yandex_api import get_forecast_weather_by_city
 
 
-bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
+logger = logging.getLogger(__name__)
 
+bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
 
 keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
 keyboard.add('Погода')
@@ -27,7 +30,15 @@ def get_weather(message: Message) -> None:
 
 
 def return_weather(message: Message) -> None:
-    text = get_forecast_weather_by_city(message.text)
+    try:
+        text = get_forecast_weather_by_city(message.text)
+    except ValueError as err:
+        logger.error(err)
+        text = str(err)
+    except Exception as err:
+        logger.error(err)
+        text = 'При запросе погоды произошла ошибка'
+
     bot.reply_to(message, text=text)
 
 
