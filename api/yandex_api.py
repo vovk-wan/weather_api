@@ -1,8 +1,13 @@
+import logging
+
 import requests
 
 from django.conf import settings
 
 from api.models import City
+
+
+logger = logging.getLogger(__name__)
 
 
 class Fact:
@@ -88,6 +93,7 @@ def get_weather_by_city(
     try:
         city = City.objects.get(name__iexact=city_name.strip())
     except City.DoesNotExist as err:
+        logger.error(err)
         raise ValueError('Город не найден в базе')
 
     params = {'lat': city.lat, 'lon': city.lon, 'lang': lang, 'limit': limit}
@@ -100,6 +106,7 @@ def get_weather_by_city(
             timeout=(5, 10)
         )
     except requests.exceptions.Timeout as err:
+        logger.error(err)
         raise ValueError('Сервер погоды не ответил в отведенный период')
 
     return response.json()
